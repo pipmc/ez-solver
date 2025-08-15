@@ -1,31 +1,12 @@
-import dataclasses
+from typing import Any, Literal, TypedDict
 
 import inspect_ai.solver
 import inspect_ai.util
 
 
-@dataclasses.dataclass
-class ExecCall:
-    """Represents an exec sandbox call."""
-
-    cmd: list[str]
-    input: str | None = None
-    cwd: str | None = None
-    env: dict[str, str] = dataclasses.field(default_factory=dict)
-    user: str | None = None
-    timeout: int | None = None
-    timeout_retry: bool = True
-
-
-@dataclasses.dataclass
-class WriteFileCall:
-    """Represents a write_file sandbox call."""
-
-    file: str
-    contents: str | bytes
-
-
-SandboxCall = ExecCall | WriteFileCall
+class SandboxCall(TypedDict):
+    type: Literal["exec", "write_file"]
+    args: dict[str, Any]  # pyright: ignore[reportExplicitAny]
 
 
 @inspect_ai.solver.solver
@@ -47,18 +28,10 @@ def ez_solver(
     ) -> inspect_ai.solver.TaskState:
         sandbox = inspect_ai.util.sandbox()
         for call in sandbox_calls:
-            if isinstance(call, ExecCall):
-                _ = await sandbox.exec(
-                    call.cmd,
-                    input=call.input,
-                    cwd=call.cwd,
-                    env=call.env,
-                    user=call.user,
-                    timeout=call.timeout,
-                    timeout_retry=call.timeout_retry,
-                )
+            if call["type"] == "exec":
+                _ = await sandbox.exec(**call["args"])  # pyright: ignore[reportAny]
             else:
-                await sandbox.write_file(file=call.file, contents=call.contents)
+                await sandbox.write_file(**call["args"])  # pyright: ignore[reportAny]
 
         state.output.completion = answer
         state.completed = True

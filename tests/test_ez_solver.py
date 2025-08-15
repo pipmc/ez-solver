@@ -28,7 +28,11 @@ def expected_files_scorer(
 
         actual: dict[str, FileCheckResult] = {}
         for filename, content in expected_files.items():
-            result: FileCheckResult = {"correct": False, "error": None, "contents": None}
+            result: FileCheckResult = {
+                "correct": False,
+                "error": None,
+                "contents": None,
+            }
             try:
                 actual_content = await sandbox.read_file(
                     filename, text=isinstance(content, str)
@@ -57,23 +61,29 @@ async def test_sandbox_calls_execution() -> None:
     """Test that sandbox calls are properly configured."""
     solver = ez_solver.ez_solver(
         sandbox_calls=[
-            ez_solver.WriteFileCall(
-                file="/tmp/test.txt",
-                contents="test content",
-            ),
-            ez_solver.ExecCall(
-                cmd=["sh", "-c", "echo -n normal > test2.txt"],
-                cwd="/root",
-            ),
-            ez_solver.ExecCall(
-                cmd=["sh", "-c", "echo -n $OUTCOME > test3.txt"],
-                cwd="/tmp",
-                env={"OUTCOME": "stall"},
-            ),
-            ez_solver.WriteFileCall(
-                file="/tmp/test4.bin",
-                contents=b"\x03\x0a\x22",
-            ),
+            {
+                "type": "write_file",
+                "args": {"file": "/tmp/test.txt", "contents": "test content"},
+            },
+            {
+                "type": "exec",
+                "args": {
+                    "cmd": ["sh", "-c", "echo -n normal > test2.txt"],
+                    "cwd": "/root",
+                },
+            },
+            {
+                "type": "exec",
+                "args": {
+                    "cmd": ["sh", "-c", "echo -n $OUTCOME > test3.txt"],
+                    "cwd": "/tmp",
+                    "env": {"OUTCOME": "stall"},
+                },
+            },
+            {
+                "type": "write_file",
+                "args": {"file": "/tmp/test4.bin", "contents": b"\x03\x0a\x22"},
+            },
         ],
         answer="File operations completed",
     )
