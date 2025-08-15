@@ -1,5 +1,7 @@
+import textwrap
 from typing import Any, Literal, TypedDict
 
+import inspect_ai.log
 import inspect_ai.solver
 import inspect_ai.util
 
@@ -29,7 +31,23 @@ def ez_solver(
         sandbox = inspect_ai.util.sandbox()
         for call in sandbox_calls:
             if call["type"] == "exec":
-                _ = await sandbox.exec(**call["args"])  # pyright: ignore[reportAny]
+                result = await sandbox.exec(**call["args"])  # pyright: ignore[reportAny]
+                inspect_ai.log.transcript().info(
+                    textwrap.dedent(
+                        f"""
+                        exec result (exit code {result.returncode}):
+                        
+                        stdout:
+                        ```
+                        {result.stdout}
+                        ```
+                        stderr:
+                        ```
+                        {result.stderr}
+                        ```
+                        """
+                    )
+                )
             else:
                 await sandbox.write_file(**call["args"])  # pyright: ignore[reportAny]
 
