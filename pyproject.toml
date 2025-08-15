@@ -1,0 +1,46 @@
+[project]
+name = "ez-solver"
+authors = [{ name = "Pip Arnott", email = "pip@intelligible.systems" }]
+version = "0.0.1"
+description = "A solver that runs hardcoded steps against a sandbox"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "inspect_ai>=0.3.121",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright",
+    "pytest-asyncio",
+    "pytest-mock",
+    "pytest",
+    "ruff",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pyright]
+exclude = [
+  "**/__pycache__",
+  "**/.*",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+    # Use modern Python imports (i.e., don't require __init__.py files everywhere)
+    "--import-mode=importlib",
+    # Require markers to be explicitly defined
+    "--strict-markers",
+    "--ignore=scratch",
+]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+pythonpath = "."
+
+[tool.ruff.lint]
+extend-select = ["I"]  # use default rules + isort rules for imports
+
+[project.entry-points.inspect_ai]
+ez_solver = "ez_solver._registry"
